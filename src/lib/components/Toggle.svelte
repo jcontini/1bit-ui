@@ -58,7 +58,7 @@
   }
   
   .bit-toggle__label {
-    padding: 0 6px;
+    padding: 2px 8px;
     line-height: 1;
     color: var(--1bit-fg);
     background: var(--1bit-bg);

@@ -27,8 +27,7 @@
     color: var(--1bit-fg);
     background-color: var(--1bit-bg);
     border: var(--1bit-border-width) solid var(--1bit-fg);
-    border-radius: 4px;
-    padding: 0 6px;
+    padding: 4px 8px;
     cursor: pointer;
     position: relative;
     display: inline-flex;

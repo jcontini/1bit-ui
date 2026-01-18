@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Button, Modal, Checkbox, Input, Radio, List, TabPanel, ProgressBar, Toggle, Slider } from '$lib';
+  import { Button, Modal, Checkbox, Input, Radio, List, TabPanel, Tabs, ProgressBar, Toggle, Slider, Dropdown, Panel, TitleBar, Screen } from '$lib';
   
   let showModal = $state(false);
   let panelTab = $state('info');
@@ -11,6 +11,17 @@
   let borderWidth = $state(1);
   let brightness = $state(100);
   let ditherPattern = $state('checker-1');
+  
+  // Demo state for components
+  let inputValue = $state('');
+  let dropdownValue = $state('option1');
+  let activeTab = $state('tab1');
+  
+  const dropdownOptions = [
+    { value: 'option1', label: 'Option 1' },
+    { value: 'option2', label: 'Option 2' },
+    { value: 'option3', label: 'Option 3' }
+  ];
   
   // Custom color inputs
   let customBg = $state('#A8B858');
@@ -89,7 +100,6 @@
   }
   
   const ditherPatterns = [
-    { id: 'none', label: 'None' },
     { id: 'checker-1', label: 'Check 1' },
     { id: 'checker-2', label: 'Check 2' },
     { id: 'hlines', label: 'H-Lines' },
@@ -199,13 +209,22 @@
 <div class="page" style="--1bit-border-width: {borderWidth}px;">
   <div class="page__content">
     <header class="header">
-      <h1>1bit UI</h1>
-      <p>A retro 1-bit component library for Svelte</p>
+      <div class="header__text">
+        <h1>1bit UI</h1>
+        <p>A retro 1-bit component library for Svelte</p>
+      </div>
+      <Toggle labelOff="Light" labelOn="Dark" checked={themeMode === 'dark'} onchange={(checked) => themeMode = checked ? 'dark' : 'light'} />
     </header>
 
   <div class="grid">
     <!-- Column 1: Controls -->
     <div class="column">
+      <section>
+        <h2>Theme</h2>
+        <Radio name="theme" value="light" label="Light" bind:group={themeMode} />
+        <Radio name="theme" value="dark" label="Dark" bind:group={themeMode} />
+      </section>
+      
       <section>
         <h2>Colors</h2>
         <List 
@@ -220,12 +239,6 @@
       </section>
       
       <section>
-        <h2>Theme</h2>
-        <Radio name="theme" value="light" label="Light" bind:group={themeMode} />
-        <Radio name="theme" value="dark" label="Dark" bind:group={themeMode} />
-      </section>
-      
-      <section>
         <h2>Options</h2>
         <Checkbox label="Show Date/Time" bind:checked={showDateTime} />
         <Checkbox label="Show Dither Picker" bind:checked={showDitherOptions} />
@@ -233,12 +246,13 @@
       </section>
       
       <section>
-        <h2>Buttons</h2>
-        <div class="row">
-          <Button>OK</Button>
-          <Button>Cancel</Button>
-          <Button>New</Button>
-        </div>
+        <h2>Input</h2>
+        <Input bind:value={inputValue} placeholder="Type here..." />
+      </section>
+      
+      <section>
+        <h2>Dropdown</h2>
+        <Dropdown options={dropdownOptions} bind:value={dropdownValue} />
       </section>
     </div>
     
@@ -285,6 +299,39 @@
       </section>
       
       <section>
+        <h2>Buttons</h2>
+        <div class="row">
+          <Button>OK</Button>
+          <Button>Cancel</Button>
+          <Button>New</Button>
+        </div>
+      </section>
+      
+      <section>
+        <h2>Tabs</h2>
+        <Tabs 
+          tabs={[
+            { id: 'tab1', label: 'File' },
+            { id: 'tab2', label: 'Edit' },
+            { id: 'tab3', label: 'View' }
+          ]}
+          bind:activeTab={activeTab}
+        />
+      </section>
+      
+      <section>
+        <h2>Panel</h2>
+        <Panel title="System Info">
+          <p style="margin: 0;">Memory: 2MB</p>
+        </Panel>
+      </section>
+      
+      <section>
+        <h2>Title Bar</h2>
+        <TitleBar title="File Manager" rightContent="12:00" />
+      </section>
+      
+      <section>
         <h2>Screen Size</h2>
         <ProgressBar value={sizePercent} label={currentSize.name} />
       </section>
@@ -296,10 +343,42 @@
       {#if showDateTime}
       <div class="wizard-panel__border">
         <div class="wizard-panel {getDitherClass(ditherPattern) || 'dither-50'}">
+          <div class="wizard-panel__inner-shadow">
+          <div class="wizard-panel__inner-border">
           <div class="wizard-panel__inner">
           <div class="wizard-panel__header">
-            <span>{cityName}</span>
-            {#if regionName}<span class="wizard-panel__region">{regionName}</span>{/if}
+            <svg class="wizard-panel__globe" viewBox="0 0 24 24" fill="currentColor">
+              <!-- Pixel art globe icon -->
+              <rect x="8" y="2" width="8" height="2"/>
+              <rect x="6" y="4" width="2" height="2"/>
+              <rect x="16" y="4" width="2" height="2"/>
+              <rect x="4" y="6" width="2" height="2"/>
+              <rect x="18" y="6" width="2" height="2"/>
+              <rect x="2" y="8" width="2" height="8"/>
+              <rect x="20" y="8" width="2" height="8"/>
+              <rect x="4" y="16" width="2" height="2"/>
+              <rect x="18" y="16" width="2" height="2"/>
+              <rect x="6" y="18" width="2" height="2"/>
+              <rect x="16" y="18" width="2" height="2"/>
+              <rect x="8" y="20" width="8" height="2"/>
+              <!-- Horizontal line -->
+              <rect x="4" y="11" width="16" height="2"/>
+              <!-- Vertical line -->
+              <rect x="11" y="4" width="2" height="16"/>
+              <!-- Curved lines -->
+              <rect x="7" y="6" width="2" height="2"/>
+              <rect x="6" y="8" width="2" height="2"/>
+              <rect x="6" y="14" width="2" height="2"/>
+              <rect x="7" y="16" width="2" height="2"/>
+              <rect x="15" y="6" width="2" height="2"/>
+              <rect x="16" y="8" width="2" height="2"/>
+              <rect x="16" y="14" width="2" height="2"/>
+              <rect x="15" y="16" width="2" height="2"/>
+            </svg>
+            <div class="wizard-panel__location">
+              <span>{cityName}</span>
+              {#if regionName}<span class="wizard-panel__region">{regionName}</span>{/if}
+            </div>
           </div>
           <div class="wizard-panel__bar"></div>
           <div class="wizard-panel__date">{dateString}</div>
@@ -310,13 +389,15 @@
           <div class="wizard-panel__bar"></div>
           <div class="wizard-panel__gmt">{gmtOffset()}</div>
           </div>
+          </div>
+          </div>
         </div>
       </div>
       {/if}
       
       {#if showDitherOptions}
       <div class="dither-picker">
-        <p class="dither-note">Dither Pattern</p>
+        <h2>Dither Pattern</h2>
         <div class="dither-grid">
           {#each ditherPatterns as pattern}
             <button 
@@ -369,14 +450,19 @@
   
   .header {
     margin-bottom: 32px;
+    padding-bottom: 16px;
+    border-bottom: var(--1bit-border-width) solid var(--1bit-fg);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
   }
   
-  .header h1 {
+  .header__text h1 {
     margin: 0 0 4px 0;
     font-size: 2em;
   }
   
-  .header p {
+  .header__text p {
     margin: 0;
     opacity: 0.7;
   }
@@ -454,12 +540,14 @@
     display: flex;
     flex-direction: column;
     gap: 16px;
+    align-items: stretch;
   }
   
   .wizard-panel__border {
     --corner-cut: 12px;
     background-color: var(--1bit-fg);
-    padding: 1px;
+    padding: 1px 1px 2px 1px;
+    width: 100%;
     image-rendering: pixelated;
     image-rendering: crisp-edges;
     clip-path: polygon(
@@ -476,7 +564,7 @@
   
   .wizard-panel {
     --corner-cut: 11px;
-    padding: 16px;
+    padding: 12px;
     background-color: var(--1bit-bg);
     clip-path: polygon(
       var(--corner-cut) 0,
@@ -490,10 +578,42 @@
     );
   }
   
+  .wizard-panel__inner-shadow {
+    --corner-cut: 10px;
+    background-color: var(--1bit-fg);
+    padding: 0 2px 2px 0;
+    clip-path: polygon(
+      var(--corner-cut) 0,
+      calc(100% - var(--corner-cut)) 0,
+      100% var(--corner-cut),
+      100% calc(100% - var(--corner-cut)),
+      calc(100% - var(--corner-cut)) 100%,
+      var(--corner-cut) 100%,
+      0 calc(100% - var(--corner-cut)),
+      0 var(--corner-cut)
+    );
+  }
+
+  .wizard-panel__inner-border {
+    --corner-cut: 9px;
+    background-color: var(--1bit-fg);
+    padding: 1px;
+    clip-path: polygon(
+      var(--corner-cut) 0,
+      calc(100% - var(--corner-cut)) 0,
+      100% var(--corner-cut),
+      100% calc(100% - var(--corner-cut)),
+      calc(100% - var(--corner-cut)) 100%,
+      var(--corner-cut) 100%,
+      0 calc(100% - var(--corner-cut)),
+      0 var(--corner-cut)
+    );
+  }
+
   .wizard-panel__inner {
     --corner-cut: 8px;
     background-color: var(--1bit-bg);
-    padding: 12px;
+    padding: 6px 6px 4px 6px;
     display: flex;
     flex-direction: column;
     gap: 2px;
@@ -511,20 +631,32 @@
   
   .wizard-panel__header {
     display: flex;
-    flex-direction: column;
+    align-items: center;
+    gap: 8px;
     font-weight: bold;
     line-height: 1.2;
   }
-  
-  .wizard-panel__region {
-    font-size: 0.85em;
-    opacity: 0.8;
+
+  .wizard-panel__globe {
+    width: 38px;
+    height: 38px;
+    flex-shrink: 0;
+  }
+
+  .wizard-panel__location {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.1;
   }
   
+  .wizard-panel__region {
+    opacity: 0.8;
+  }
+
   .wizard-panel__bar {
     height: 3px;
     background-color: var(--1bit-fg);
-    margin: 6px 0;
+    margin: 2px 0;
   }
   
   .wizard-panel__date {
@@ -534,8 +666,10 @@
   .wizard-panel__time {
     display: flex;
     align-items: flex-end;
+    justify-content: flex-end;
     gap: 4px;
-    margin: 4px 0;
+    margin: 2px 0;
+    padding-right: 8px;
   }
   
   .wizard-panel__digits {
@@ -554,6 +688,7 @@
   .wizard-panel__gmt {
     font-size: 0.85em;
     text-align: right;
+    padding-right: 8px;
     opacity: 0.8;
   }
   
@@ -561,11 +696,6 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
-  }
-  
-  .dither-note {
-    font-size: 0.75em;
-    opacity: 0.7;
   }
   
   .dither-grid {
@@ -613,11 +743,11 @@
   
   /* Dynamic dither patterns using CSS variables */
   .dither-checker-1 {
-    background: repeating-conic-gradient(var(--1bit-bg) 0deg 90deg, var(--1bit-fg) 90deg 180deg) 0 0/4px 4px;
+    background: repeating-conic-gradient(var(--1bit-bg) 0deg 90deg, var(--1bit-fg) 90deg 180deg) 0 0/6px 6px;
   }
   
   .dither-checker-2 {
-    background: repeating-conic-gradient(var(--1bit-bg) 0deg 90deg, var(--1bit-fg) 90deg 180deg) 0 0/2px 2px;
+    background: repeating-conic-gradient(var(--1bit-bg) 0deg 90deg, var(--1bit-fg) 90deg 180deg) 0 0/4px 4px;
   }
   
   .dither-hlines {
@@ -682,8 +812,6 @@
   
   .bit-modal-inline__content {
     padding: 8px;
-    border: var(--1bit-border-width) solid var(--1bit-fg);
-    margin: 4px;
   }
   
   .bit-modal-inline__content p {

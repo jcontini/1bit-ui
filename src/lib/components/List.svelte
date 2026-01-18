@@ -44,18 +44,35 @@
   }
   
   .bit-list__item {
-    padding: 0 4px;
+    padding: 4px 8px;
     text-align: left;
     background: none;
     border: none;
     cursor: pointer;
     font-family: inherit;
     font-size: inherit;
+    line-height: 1;
     color: var(--1bit-fg);
   }
   
   .bit-list__item--divider {
-    border-bottom: 1px dotted var(--1bit-fg);
+    position: relative;
+  }
+  
+  .bit-list__item--divider::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 1px;
+    background: repeating-linear-gradient(
+      to right,
+      var(--1bit-fg) 0px,
+      var(--1bit-fg) 2px,
+      transparent 2px,
+      transparent 4px
+    );
   }
   
   .bit-list__item:hover:not(.bit-list__item--selected) {

@@ -48,7 +48,7 @@
   }
   
   .bit-tabs__tab {
-    padding: 0 6px;
+    padding: 4px 8px;
     background-color: var(--1bit-bg);
     border: none;
     border-right: var(--1bit-border-width) solid var(--1bit-fg);

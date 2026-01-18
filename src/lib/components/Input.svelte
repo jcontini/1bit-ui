@@ -38,7 +38,8 @@
     font-family: inherit;
     font-size: inherit;
     color: var(--1bit-fg);
-    padding: 0 4px;
+    padding: 4px 8px;
+    line-height: 1;
   }
   
   .bit-input--box {
@@ -49,8 +50,17 @@
   .bit-input--underline {
     background-color: transparent;
     border: none;
-    border-bottom: 1px dotted var(--1bit-fg);
-    padding-left: 0;
+    padding: 4px 0;
+    background-image: repeating-linear-gradient(
+      to right,
+      var(--1bit-fg) 0px,
+      var(--1bit-fg) 2px,
+      transparent 2px,
+      transparent 4px
+    );
+    background-repeat: repeat-x;
+    background-position: bottom left;
+    background-size: 100% 1px;
   }
   
   .bit-input:focus {
@@ -59,7 +69,7 @@
   
   .bit-input--underline:focus {
     box-shadow: none;
-    border-bottom-style: solid;
+    background-image: linear-gradient(var(--1bit-fg), var(--1bit-fg));
   }
   
   .bit-input:disabled {

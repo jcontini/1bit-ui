@@ -2,7 +2,9 @@
 
 A retro 1-bit component library for Svelte 5 — inspired by Palm Pilot, Macintosh, and Game Boy aesthetics.
 
-![1bit UI Demo](1bit-ui.png)
+<p align="center">
+  <img src="1bit-ui.png" alt="1bit UI Demo" width="800">
+</p>
 
 ## What is 1-bit?
 

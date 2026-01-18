@@ -15,7 +15,8 @@
 
 {#if open}
   <div class="bit-modal-backdrop" onclick={onclose} onkeydown={e => e.key === 'Escape' && onclose?.()} role="presentation">
-    <div class="bit-modal" onclick={e => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="bit-modal__border" onclick={e => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <div class="bit-modal">
       <div class="bit-modal__titlebar">
         <span id="modal-title" class="bit-modal__title">{title}</span>
         {#if showInfo}
@@ -30,6 +31,7 @@
           {@render footer()}
         </div>
       {/if}
+      </div>
     </div>
   </div>
 {/if}
@@ -45,13 +47,37 @@
     z-index: 1000;
   }
   
-  .bit-modal {
-    background-color: var(--1bit-bg);
-    border: var(--1bit-border-thick) solid var(--1bit-fg);
-    border-radius: 3px;
+  .bit-modal__border {
+    --corner-cut: 3px;
+    background-color: var(--1bit-fg);
+    padding: var(--1bit-border-thick, 2px);
     min-width: 200px;
     max-width: 90vw;
-    overflow: hidden;
+    clip-path: polygon(
+      var(--corner-cut) 0,
+      calc(100% - var(--corner-cut)) 0,
+      100% var(--corner-cut),
+      100% calc(100% - var(--corner-cut)),
+      calc(100% - var(--corner-cut)) 100%,
+      var(--corner-cut) 100%,
+      0 calc(100% - var(--corner-cut)),
+      0 var(--corner-cut)
+    );
+  }
+  
+  .bit-modal {
+    --corner-cut: 2px;
+    background-color: var(--1bit-bg);
+    clip-path: polygon(
+      var(--corner-cut) 0,
+      calc(100% - var(--corner-cut)) 0,
+      100% var(--corner-cut),
+      100% calc(100% - var(--corner-cut)),
+      calc(100% - var(--corner-cut)) 100%,
+      var(--corner-cut) 100%,
+      0 calc(100% - var(--corner-cut)),
+      0 var(--corner-cut)
+    );
   }
   
   .bit-modal__titlebar {

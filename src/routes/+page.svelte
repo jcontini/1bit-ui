@@ -1,191 +1,339 @@
 <script lang="ts">
-  import { Button, Modal, Checkbox, Input, Dropdown, Radio, List, Tabs, TabPanel, ProgressBar, Toggle, Slider } from '$lib';
+  import { Button, Modal, Checkbox, Input, Radio, List, TabPanel, ProgressBar, Toggle, Slider } from '$lib';
   
   let showModal = $state(false);
   let panelTab = $state('info');
-  let checked = $state(true);
-  let text = $state('');
-  let dropdown = $state('all');
-  let radio = $state('day');
-  let selected = $state('item2');
-  let tab = $state('stats');
-  let darkMode = $state(true);
-  let borderWidth = $state(2);
+  let showDateTime = $state(true);
+  let showDitherOptions = $state(true);
+  let colorTheme = $state('classic');
+  let themeMode = $state('dark');
+  let showSidebar = $state(true);
+  let borderWidth = $state(1);
+  let brightness = $state(100);
+  let ditherPattern = $state('checker-1');
+  
+  // Custom color inputs
+  let customBg = $state('#A8B858');
+  let customFg = $state('#000000');
+  
+  const darkMode = $derived(themeMode === 'dark');
+  
+  // Built-in color themes
+  const builtInThemes: Record<string, { name: string; light: { bg: string; fg: string }; dark: { bg: string; fg: string } }> = {
+    classic: {
+      name: 'Classic LCD',
+      light: { bg: '#A8B858', fg: '#000000' },
+      dark: { bg: '#000000', fg: '#A8B858' }
+    },
+    amber: {
+      name: 'Amber CRT',
+      light: { bg: '#FFB000', fg: '#2A1A00' },
+      dark: { bg: '#2A1A00', fg: '#FFB000' }
+    },
+    green: {
+      name: 'Green CRT',
+      light: { bg: '#33FF33', fg: '#0A3309' },
+      dark: { bg: '#0A3309', fg: '#33FF33' }
+    },
+    indigo: {
+      name: 'Indigo',
+      light: { bg: '#FFFFFF', fg: '#58AAE5' },
+      dark: { bg: '#0A1A2A', fg: '#58AAE5' }
+    },
+    wizard: {
+      name: 'Sharp Wizard',
+      light: { bg: '#739380', fg: '#000000' },
+      dark: { bg: '#000000', fg: '#739380' }
+    }
+  };
+  
+  // Custom themes from localStorage
+  let customThemes = $state<Record<string, { name: string; light: { bg: string; fg: string }; dark: { bg: string; fg: string } }>>({});
+  
+  // Load custom themes on mount
+  $effect(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('1bit-custom-themes');
+      if (saved) {
+        try {
+          customThemes = JSON.parse(saved);
+        } catch (e) {
+          console.error('Failed to load custom themes');
+        }
+      }
+    }
+  });
+  
+  // All themes combined
+  const colorThemes = $derived({ ...builtInThemes, ...customThemes });
+  
+  // List items for theme picker
+  const themeListItems = $derived(
+    Object.entries(colorThemes).map(([id, theme]) => ({ id, content: theme.name }))
+  );
+  
+  // Save custom theme
+  function saveCustomTheme() {
+    const id = `custom_${Date.now()}`;
+    const name = `Custom ${Object.keys(customThemes).length + 1}`;
+    customThemes = {
+      ...customThemes,
+      [id]: {
+        name,
+        light: { bg: customBg, fg: customFg },
+        dark: { bg: customFg, fg: customBg }
+      }
+    };
+    localStorage.setItem('1bit-custom-themes', JSON.stringify(customThemes));
+    colorTheme = id;
+  }
+  
+  const ditherPatterns = [
+    { id: 'none', label: 'None' },
+    { id: 'checker-1', label: 'Check 1' },
+    { id: 'checker-2', label: 'Check 2' },
+    { id: 'hlines', label: 'H-Lines' },
+    { id: 'vlines', label: 'V-Lines' },
+  ];
+  
+  // Helper to parse hex color
+  function hexToRgb(hex: string) {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? {
+      r: parseInt(result[1], 16),
+      g: parseInt(result[2], 16),
+      b: parseInt(result[3], 16)
+    } : { r: 0, g: 0, b: 0 };
+  }
+  
+  // Mix two colors
+  function mixColors(fg: string, bg: string, amount: number) {
+    const fgRgb = hexToRgb(fg);
+    const bgRgb = hexToRgb(bg);
+    const r = Math.round(fgRgb.r * amount + bgRgb.r * (1 - amount));
+    const g = Math.round(fgRgb.g * amount + bgRgb.g * (1 - amount));
+    const b = Math.round(fgRgb.b * amount + bgRgb.b * (1 - amount));
+    return `rgb(${r}, ${g}, ${b})`;
+  }
+  
+  // Get current colors based on theme and mode
+  $effect(() => {
+    const theme = colorThemes[colorTheme];
+    if (!theme) return;
+    const colors = darkMode ? theme.dark : theme.light;
+    document.documentElement.style.setProperty('--1bit-bg', colors.bg);
+    // Apply brightness by mixing fg with bg
+    const mixedFg = mixColors(colors.fg, colors.bg, brightness / 100);
+    document.documentElement.style.setProperty('--1bit-fg', mixedFg);
+  });
+  
+  // Clock for Sharp Wizard display
+  let now = $state(new Date());
+  
+  const timeZone = $derived(Intl.DateTimeFormat().resolvedOptions().timeZone);
+  const tzParts = $derived(timeZone.split('/'));
+  const cityName = $derived(tzParts[tzParts.length - 1]?.replace(/_/g, ' ')?.toUpperCase() ?? 'LOCAL');
+  const regionName = $derived(tzParts.length > 1 ? tzParts[0].replace(/_/g, ' ').toUpperCase() : '');
+  
+  const hours = $derived(now.getHours() % 12 || 12);
+  const minutes = $derived(now.getMinutes().toString().padStart(2, '0'));
+  const ampm = $derived(now.getHours() >= 12 ? 'PM' : 'AM');
+  
+  const dateString = $derived(
+    now.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase() + ' ' +
+    now.toLocaleDateString('en-US', { month: 'short' }).toUpperCase() + ' ' +
+    now.getDate() + ', ' +
+    now.getFullYear()
+  );
+  
+  const gmtOffset = $derived(() => {
+    const offset = -now.getTimezoneOffset();
+    const sign = offset >= 0 ? '+' : '-';
+    const hrs = Math.floor(Math.abs(offset) / 60).toString().padStart(2, '0');
+    const mins = (Math.abs(offset) % 60).toString().padStart(2, '0');
+    return `(${sign}${hrs}:${mins})`;
+  });
+  
+  $effect(() => {
+    const interval = setInterval(() => {
+      now = new Date();
+    }, 1000);
+    return () => clearInterval(interval);
+  });
+  
+  // Screen size detection
+  let screenWidth = $state(typeof window !== 'undefined' ? window.innerWidth : 1024);
+  
+  const screenSizes = [
+    { name: 'XS', min: 0, max: 480 },
+    { name: 'SM', min: 480, max: 768 },
+    { name: 'MD', min: 768, max: 1024 },
+    { name: 'LG', min: 1024, max: 1280 },
+    { name: 'XL', min: 1280, max: Infinity }
+  ];
+  
+  const currentSize = $derived(screenSizes.find(s => screenWidth >= s.min && screenWidth < s.max) ?? screenSizes[2]);
+  const sizeIndex = $derived(screenSizes.indexOf(currentSize));
+  const sizePercent = $derived((sizeIndex + 1) / screenSizes.length * 100);
+  
+  $effect(() => {
+    if (typeof window === 'undefined') return;
+    
+    const handleResize = () => {
+      screenWidth = window.innerWidth;
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  });
+  
+  function getDitherClass(pattern: string) {
+    if (pattern === 'none') return '';
+    if (pattern === '25') return 'dither-25';
+    if (pattern === '50') return 'dither-50';
+    if (pattern === '75') return 'dither-75';
+    return `dither-${pattern}`;
+  }
 </script>
 
-<div class="page" class:dark={darkMode} style="--1bit-border-width: {borderWidth}px;">
-  <header class="header">
-    <h1>1bit UI</h1>
-    <p>A retro 1-bit component library for Svelte</p>
-    <Toggle bind:checked={darkMode} labelOff="Light" labelOn="Dark" />
-  </header>
+<div class="page" style="--1bit-border-width: {borderWidth}px;">
+  <div class="page__content">
+    <header class="header">
+      <h1>1bit UI</h1>
+      <p>A retro 1-bit component library for Svelte</p>
+    </header>
 
   <div class="grid">
-    <!-- Column 1: Simple controls -->
-    <section class="col-1">
-      <h2>Buttons</h2>
-      <div class="row">
-        <Button>OK</Button>
-        <Button>Cancel</Button>
-        <Button>New</Button>
-      </div>
-    </section>
-    
-    <section class="col-1">
-      <h2>Inputs</h2>
-      <Input bind:value={text} placeholder="Box input" />
-      <div style="height: 4px;"></div>
-      <Input variant="underline" placeholder="Underline input" />
-    </section>
-    
-    <section class="col-1">
-      <h2>Dropdown</h2>
-      <Dropdown 
-        options={[
-          { value: 'all', label: 'All' },
-          { value: 'business', label: 'Business' },
-          { value: 'personal', label: 'Personal' }
-        ]} 
-        bind:value={dropdown} 
-      />
-    </section>
-    
-    <section class="col-1">
-      <h2>Checkboxes</h2>
-      <Checkbox label="Show completed" bind:checked />
-      <Checkbox label="Show priorities" />
-      <Checkbox label="Auto-sync" />
-    </section>
-    
-    <section class="col-1">
-      <h2>Radio Buttons</h2>
-      <Radio name="view" value="day" label="Day view" bind:group={radio} />
-      <Radio name="view" value="week" label="Week view" bind:group={radio} />
-      <Radio name="view" value="month" label="Month view" bind:group={radio} />
-    </section>
-    
-    <section class="col-1">
-      <h2>Slider</h2>
-      <Slider bind:value={borderWidth} min={1} max={5} step={1} label="Border:" />
-    </section>
-    
-    <section class="col-1">
-      <h2>Progress</h2>
-      <ProgressBar value={42} label="Memory:" />
-      <ProgressBar value={78} label="Storage:" />
-    </section>
+    <!-- Column 1: Controls -->
+    <div class="column">
+      <section>
+        <h2>Colors</h2>
+        <List 
+          items={themeListItems} 
+          bind:selectedId={colorTheme}
+        />
+      </section>
+      
+      <section>
+        <h2>Brightness</h2>
+        <Slider bind:value={brightness} min={20} max={100} step={10} />
+      </section>
+      
+      <section>
+        <h2>Theme</h2>
+        <Radio name="theme" value="light" label="Light" bind:group={themeMode} />
+        <Radio name="theme" value="dark" label="Dark" bind:group={themeMode} />
+      </section>
+      
+      <section>
+        <h2>Options</h2>
+        <Checkbox label="Show Date/Time" bind:checked={showDateTime} />
+        <Checkbox label="Show Dither Picker" bind:checked={showDitherOptions} />
+        <Checkbox label="Show Sidebar" bind:checked={showSidebar} />
+      </section>
+      
+      <section>
+        <h2>Buttons</h2>
+        <div class="row">
+          <Button>OK</Button>
+          <Button>Cancel</Button>
+          <Button>New</Button>
+        </div>
+      </section>
+    </div>
     
     <!-- Column 2: Complex/multi components -->
-    <section class="col-2 row-start">
-      <h2>Tabs</h2>
-      <Tabs 
-        tabs={[
-          { id: 'stats', label: 'Stats' },
-          { id: 'equip', label: 'Equip' },
-          { id: 'spells', label: 'Spells' },
-          { id: 'misc', label: 'Misc' }
-        ]} 
-        bind:activeTab={tab} 
-      />
-    </section>
-    
-    <section class="col-2">
-      <h2>List</h2>
-      <List 
-        items={[
-          { id: 'item1', content: 'Wakem & McLaughlin' },
-          { id: 'item2', content: '4 cs printers blank' },
-          { id: 'item3', content: 'Spaulding & Bros' }
-        ]} 
-        bind:selectedId={selected} 
-      />
-    </section>
-    
-    <section class="col-2">
-      <h2>Tab Panel</h2>
-      <TabPanel 
-        tabs={[
-          { id: 'info', label: 'Info' },
-          { id: 'notes', label: 'Notes' },
-          { id: 'settings', label: 'Settings' }
-        ]}
-        bind:activeTab={panelTab}
-      >
-        {#snippet children(active)}
-          {#if active === 'info'}
-            <div>Welcome to 1bit UI!</div>
-          {:else if active === 'notes'}
-            <div>Your notes here.</div>
-          {:else}
-            <div>Settings panel.</div>
-          {/if}
-        {/snippet}
-      </TabPanel>
-    </section>
-    
-    <section class="col-2">
-      <h2>Modal</h2>
-      <div class="bit-modal-inline">
-        <div class="bit-modal-inline__titlebar">
-          <span>Sample Dialog</span>
-        </div>
-        <div class="bit-modal-inline__content">
-          <p>Delete this item?</p>
-        </div>
-        <div class="bit-modal-inline__footer">
-          <Button>Cancel</Button>
-          <Button>OK</Button>
-        </div>
-      </div>
-    </section>
-    
-    <!-- Column 3: Typography & Dither Patterns -->
-    <section class="type-specimen">
-      <h2>Typography</h2>
-      <h1>Heading 1</h1>
-      <h2>Heading 2</h2>
-      <h3>Heading 3</h3>
-      <p>Regular text</p>
-      <p><strong>Bold</strong> <em>Italic</em></p>
-      <p>0123456789</p>
+    <div class="column">
+      <section>
+        <h2>Tab Panel</h2>
+        <TabPanel 
+          tabs={[
+            { id: 'info', label: 'Info' },
+            { id: 'notes', label: 'Notes' },
+            { id: 'settings', label: 'Settings' }
+          ]}
+          bind:activeTab={panelTab}
+        >
+          {#snippet children(active)}
+            {#if active === 'info'}
+              <div>Welcome to 1bit UI!</div>
+            {:else if active === 'notes'}
+              <div>Your notes here.</div>
+            {:else}
+              <div>Settings panel.</div>
+            {/if}
+          {/snippet}
+        </TabPanel>
+      </section>
       
-      <h2 style="margin-top: 16px;">Dither Patterns</h2>
-      <p class="dither-note">Classic 1-bit grayscale simulation</p>
-      <div class="dither-grid">
-        <div class="dither-sample">
-          <div class="dither-box dither-25"></div>
-          <span>25%</span>
+      <section>
+        <h2>Modal</h2>
+        <div class="bit-modal-inline__border">
+          <div class="bit-modal-inline">
+            <div class="bit-modal-inline__titlebar">
+              <span>Sample Dialog</span>
+            </div>
+            <div class="bit-modal-inline__content">
+              <p>Delete this item?</p>
+            </div>
+            <div class="bit-modal-inline__footer">
+              <Button>Cancel</Button>
+              <Button>OK</Button>
+            </div>
+          </div>
         </div>
-        <div class="dither-sample">
-          <div class="dither-box dither-50"></div>
-          <span>50%</span>
-        </div>
-        <div class="dither-sample">
-          <div class="dither-box dither-75"></div>
-          <span>75%</span>
-        </div>
-        <div class="dither-sample">
-          <div class="dither-box dither-bayer"></div>
-          <span>Bayer</span>
-        </div>
-        <div class="dither-sample">
-          <div class="dither-box dither-hlines"></div>
-          <span>H-Lines</span>
-        </div>
-        <div class="dither-sample">
-          <div class="dither-box dither-vlines"></div>
-          <span>V-Lines</span>
-        </div>
-        <div class="dither-sample">
-          <div class="dither-box dither-diag"></div>
-          <span>Diag</span>
-        </div>
-        <div class="dither-sample">
-          <div class="dither-box dither-cross"></div>
-          <span>Cross</span>
+      </section>
+      
+      <section>
+        <h2>Screen Size</h2>
+        <ProgressBar value={sizePercent} label={currentSize.name} />
+      </section>
+    </div>
+    
+    <!-- Column 3: Sharp Wizard Clock -->
+    {#if showSidebar}
+    <section class="wizard-clock">
+      {#if showDateTime}
+      <div class="wizard-panel__border">
+        <div class="wizard-panel {getDitherClass(ditherPattern) || 'dither-50'}">
+          <div class="wizard-panel__inner">
+          <div class="wizard-panel__header">
+            <span>{cityName}</span>
+            {#if regionName}<span class="wizard-panel__region">{regionName}</span>{/if}
+          </div>
+          <div class="wizard-panel__bar"></div>
+          <div class="wizard-panel__date">{dateString}</div>
+          <div class="wizard-panel__time">
+            <span class="wizard-panel__digits">{hours}:{minutes}</span>
+            <span class="wizard-panel__ampm">{ampm}</span>
+          </div>
+          <div class="wizard-panel__bar"></div>
+          <div class="wizard-panel__gmt">{gmtOffset()}</div>
+          </div>
         </div>
       </div>
+      {/if}
+      
+      {#if showDitherOptions}
+      <div class="dither-picker">
+        <p class="dither-note">Dither Pattern</p>
+        <div class="dither-grid">
+          {#each ditherPatterns as pattern}
+            <button 
+              class="dither-sample" 
+              class:dither-sample--active={ditherPattern === pattern.id}
+              onclick={() => ditherPattern = pattern.id}
+            >
+              <div class="dither-box {getDitherClass(pattern.id)}"></div>
+              <span>{pattern.label}</span>
+            </button>
+          {/each}
+        </div>
+      </div>
+      {/if}
     </section>
+    {/if}
+  </div>
   </div>
   
   <Modal title="Hello" open={showModal} onclose={() => showModal = false}>
@@ -201,13 +349,22 @@
 <style>
   :global(body) {
     margin: 0;
-    padding: 40px;
-    background: var(--1bit-bg);
-    color: var(--1bit-fg);
     font-family: 'Tamzen', monospace;
     font-size: 16px;
     line-height: 1.2;
+  }
+  
+  .page {
+    min-height: 100vh;
+    background: var(--1bit-bg);
+    color: var(--1bit-fg);
     transition: background-color 0.2s, color 0.2s;
+  }
+  
+  .page__content {
+    padding: 40px;
+    margin: 0 auto;
+    max-width: 1200px;
   }
   
   .header {
@@ -220,12 +377,46 @@
   }
   
   .header p {
-    margin: 0 0 12px 0;
+    margin: 0;
     opacity: 0.7;
   }
   
-  .page {
-    max-width: 1100px;
+  .stepper {
+    display: inline-flex;
+    align-items: stretch;
+    border: var(--1bit-border-width) solid var(--1bit-fg);
+    line-height: 1;
+  }
+  
+  .stepper__btn {
+    background: var(--1bit-bg);
+    color: var(--1bit-fg);
+    border: none;
+    margin: 0;
+    padding: 2px 8px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: inherit;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+  }
+  
+  .stepper__btn:hover {
+    background: var(--1bit-fg);
+    color: var(--1bit-bg);
+  }
+  
+  .stepper__value {
+    padding: 2px 8px;
+    min-width: 40px;
+    text-align: center;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-left: var(--1bit-border-width) solid var(--1bit-fg);
+    border-right: var(--1bit-border-width) solid var(--1bit-fg);
   }
   
   h2 {
@@ -234,10 +425,15 @@
   }
   
   .grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    grid-auto-flow: dense;
-    gap: 20px 32px;
+    display: flex;
+    gap: 32px;
+  }
+  
+  .column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
   }
   
   section {
@@ -247,27 +443,125 @@
     gap: 4px;
   }
   
-  .col-1 { grid-column: 1; }
-  .col-2 { grid-column: 2; }
-  .row-start { grid-row-start: 1; }
-  
   .row {
     display: flex;
     flex-wrap: wrap;
     gap: 4px;
   }
   
-  .type-specimen {
-    grid-column: 3;
-    grid-row: 1 / span 6;
-    border-left: 2px solid var(--1bit-fg);
-    padding-left: 24px;
+  .wizard-clock {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
   }
   
-  .type-specimen h1 { font-size: 2em; margin: 0 0 0.2em 0; }
-  .type-specimen h2 { font-size: 1.5em; margin: 0 0 0.2em 0; }
-  .type-specimen h3 { font-size: 1.25em; margin: 0 0 0.2em 0; }
-  .type-specimen p { margin: 0 0 0.3em 0; }
+  .wizard-panel__border {
+    --corner-cut: 12px;
+    background-color: var(--1bit-fg);
+    padding: 1px;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    clip-path: polygon(
+      var(--corner-cut) 0,
+      calc(100% - var(--corner-cut)) 0,
+      100% var(--corner-cut),
+      100% calc(100% - var(--corner-cut)),
+      calc(100% - var(--corner-cut)) 100%,
+      var(--corner-cut) 100%,
+      0 calc(100% - var(--corner-cut)),
+      0 var(--corner-cut)
+    );
+  }
+  
+  .wizard-panel {
+    --corner-cut: 11px;
+    padding: 16px;
+    background-color: var(--1bit-bg);
+    clip-path: polygon(
+      var(--corner-cut) 0,
+      calc(100% - var(--corner-cut)) 0,
+      100% var(--corner-cut),
+      100% calc(100% - var(--corner-cut)),
+      calc(100% - var(--corner-cut)) 100%,
+      var(--corner-cut) 100%,
+      0 calc(100% - var(--corner-cut)),
+      0 var(--corner-cut)
+    );
+  }
+  
+  .wizard-panel__inner {
+    --corner-cut: 8px;
+    background-color: var(--1bit-bg);
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    clip-path: polygon(
+      var(--corner-cut) 0,
+      calc(100% - var(--corner-cut)) 0,
+      100% var(--corner-cut),
+      100% calc(100% - var(--corner-cut)),
+      calc(100% - var(--corner-cut)) 100%,
+      var(--corner-cut) 100%,
+      0 calc(100% - var(--corner-cut)),
+      0 var(--corner-cut)
+    );
+  }
+  
+  .wizard-panel__header {
+    display: flex;
+    flex-direction: column;
+    font-weight: bold;
+    line-height: 1.2;
+  }
+  
+  .wizard-panel__region {
+    font-size: 0.85em;
+    opacity: 0.8;
+  }
+  
+  .wizard-panel__bar {
+    height: 3px;
+    background-color: var(--1bit-fg);
+    margin: 6px 0;
+  }
+  
+  .wizard-panel__date {
+    font-size: 0.9em;
+  }
+  
+  .wizard-panel__time {
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+    margin: 4px 0;
+  }
+  
+  .wizard-panel__digits {
+    font-size: 3em;
+    font-weight: bold;
+    line-height: 0.85;
+    letter-spacing: 1px;
+  }
+  
+  .wizard-panel__ampm {
+    font-size: 1em;
+    font-weight: bold;
+    padding-bottom: 4px;
+  }
+  
+  .wizard-panel__gmt {
+    font-size: 0.85em;
+    text-align: right;
+    opacity: 0.8;
+  }
+  
+  .dither-picker {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
   
   .dither-note {
     font-size: 0.75em;
@@ -286,6 +580,22 @@
     flex-direction: column;
     align-items: center;
     gap: 2px;
+    background: none;
+    border: var(--1bit-border-width) solid transparent;
+    padding: 4px;
+    cursor: pointer;
+    font-family: inherit;
+    color: var(--1bit-fg);
+  }
+  
+  .dither-sample:hover {
+    border-color: var(--1bit-fg);
+  }
+  
+  .dither-sample--active {
+    border-color: var(--1bit-fg);
+    background: var(--1bit-fg);
+    color: var(--1bit-bg);
   }
   
   .dither-sample span {
@@ -297,26 +607,82 @@
     height: 32px;
     image-rendering: pixelated;
     image-rendering: crisp-edges;
+    border: var(--1bit-border-width) solid var(--1bit-fg);
+    background-color: var(--1bit-bg);
+  }
+  
+  /* Dynamic dither patterns using CSS variables */
+  .dither-checker-1 {
+    background: repeating-conic-gradient(var(--1bit-bg) 0deg 90deg, var(--1bit-fg) 90deg 180deg) 0 0/4px 4px;
+  }
+  
+  .dither-checker-2 {
+    background: repeating-conic-gradient(var(--1bit-bg) 0deg 90deg, var(--1bit-fg) 90deg 180deg) 0 0/2px 2px;
+  }
+  
+  .dither-hlines {
+    background-image: repeating-linear-gradient(
+      to bottom,
+      var(--1bit-fg) 0px,
+      var(--1bit-fg) 1px,
+      transparent 1px,
+      transparent 2px
+    );
+  }
+  
+  .dither-vlines {
+    background-image: repeating-linear-gradient(
+      to right,
+      var(--1bit-fg) 0px,
+      var(--1bit-fg) 1px,
+      transparent 1px,
+      transparent 2px
+    );
+  }
+  
+  .bit-modal-inline__border {
+    --corner-cut: 4px;
+    background-color: var(--1bit-fg);
+    padding: var(--1bit-border-width);
+    min-width: 200px;
+    max-width: 300px;
+    clip-path: polygon(
+      var(--corner-cut) 0,
+      calc(100% - var(--corner-cut)) 0,
+      100% var(--corner-cut),
+      100% calc(100% - var(--corner-cut)),
+      calc(100% - var(--corner-cut)) 100%,
+      var(--corner-cut) 100%,
+      0 calc(100% - var(--corner-cut)),
+      0 var(--corner-cut)
+    );
   }
   
   .bit-modal-inline {
+    --corner-cut: 3px;
     background-color: var(--1bit-bg);
-    border: 3px solid var(--1bit-fg);
-    border-radius: 3px;
-    min-width: 200px;
-    max-width: 300px;
+    clip-path: polygon(
+      var(--corner-cut) 0,
+      calc(100% - var(--corner-cut)) 0,
+      100% var(--corner-cut),
+      100% calc(100% - var(--corner-cut)),
+      calc(100% - var(--corner-cut)) 100%,
+      var(--corner-cut) 100%,
+      0 calc(100% - var(--corner-cut)),
+      0 var(--corner-cut)
+    );
   }
   
   .bit-modal-inline__titlebar {
     background-color: var(--1bit-fg);
     color: var(--1bit-bg);
-    padding: 2px 6px;
+    padding: 4px 8px;
     font-weight: bold;
   }
   
   .bit-modal-inline__content {
-    padding: 6px;
-    border: 2px solid var(--1bit-fg);
+    padding: 8px;
+    border: var(--1bit-border-width) solid var(--1bit-fg);
     margin: 4px;
   }
   
@@ -325,7 +691,7 @@
   }
   
   .bit-modal-inline__footer {
-    padding: 4px 6px;
+    padding: 4px 8px 8px;
     display: flex;
     gap: 4px;
     justify-content: flex-end;

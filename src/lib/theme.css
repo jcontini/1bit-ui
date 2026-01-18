@@ -27,8 +27,13 @@
   --1bit-spacing-lg: 8px;
   
   /* Borders */
-  --1bit-border-width: 2px;
-  --1bit-border-thick: 3px;
+  --1bit-border-width: 1px;
+  --1bit-border-thick: 2px;
+  
+  /* Pixel-style corner cuts (chamfered corners for retro look) */
+  --1bit-corner-cut-sm: 4px;
+  --1bit-corner-cut-md: 8px;
+  --1bit-corner-cut-lg: 12px;
   
   /* 
    * Dither Patterns
@@ -115,3 +120,26 @@
 .dither-diag { background-image: var(--1bit-dither-diag); }
 .dither-bayer { background-image: var(--1bit-dither-bayer); }
 .dither-cross { background-image: var(--1bit-dither-cross); }
+
+/* 
+ * Pixel-style cut corners (chamfered)
+ * Emulates the corner style possible on actual pixel displays
+ * Use --corner-cut to control the size
+ */
+.pixel-corners {
+  --corner-cut: var(--1bit-corner-cut-md);
+  clip-path: polygon(
+    var(--corner-cut) 0,
+    calc(100% - var(--corner-cut)) 0,
+    100% var(--corner-cut),
+    100% calc(100% - var(--corner-cut)),
+    calc(100% - var(--corner-cut)) 100%,
+    var(--corner-cut) 100%,
+    0 calc(100% - var(--corner-cut)),
+    0 var(--corner-cut)
+  );
+}
+
+.pixel-corners-sm { --corner-cut: var(--1bit-corner-cut-sm); }
+.pixel-corners-md { --corner-cut: var(--1bit-corner-cut-md); }
+.pixel-corners-lg { --corner-cut: var(--1bit-corner-cut-lg); }

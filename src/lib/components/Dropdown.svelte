@@ -103,29 +103,31 @@
   </button>
   
   {#if isOpen}
-    <ul
-      bind:this={listEl}
-      class="bit-dropdown__list"
-      role="listbox"
-    >
-      {#each options as option, i}
-        <!-- svelte-ignore a11y_click_events_have_key_events -->
-        <li
-          class="bit-dropdown__option"
-          class:bit-dropdown__option--selected={option.value === value}
-          class:bit-dropdown__option--focused={i === focusedIndex}
-          role="option"
-          aria-selected={option.value === value}
-          onclick={() => select(option)}
-          onmouseenter={() => focusedIndex = i}
-        >
-          <span class="bit-dropdown__check">
-            {option.value === value ? '✓' : ''}
-          </span>
-          {option.label}
-        </li>
-      {/each}
-    </ul>
+    <div class="bit-dropdown__list-border">
+      <ul
+        bind:this={listEl}
+        class="bit-dropdown__list"
+        role="listbox"
+      >
+        {#each options as option, i}
+          <!-- svelte-ignore a11y_click_events_have_key_events -->
+          <li
+            class="bit-dropdown__option"
+            class:bit-dropdown__option--selected={option.value === value}
+            class:bit-dropdown__option--focused={i === focusedIndex}
+            role="option"
+            aria-selected={option.value === value}
+            onclick={() => select(option)}
+            onmouseenter={() => focusedIndex = i}
+          >
+            <span class="bit-dropdown__check">
+              {option.value === value ? '✓' : ''}
+            </span>
+            {option.label}
+          </li>
+        {/each}
+      </ul>
+    </div>
   {/if}
 </div>
 
@@ -141,11 +143,11 @@
     gap: var(--1bit-spacing-sm);
     font-family: inherit;
     font-size: inherit;
+    line-height: 1;
     color: var(--1bit-fg);
     background-color: var(--1bit-bg);
     border: var(--1bit-border-width) solid var(--1bit-fg);
-    border-radius: 4px;
-    padding: 2px 6px;
+    padding: 4px 8px;
     cursor: pointer;
     min-width: 80px;
   }
@@ -170,18 +172,44 @@
     color: var(--1bit-fg);
   }
   
-  .bit-dropdown__list {
+  .bit-dropdown__list-border {
+    --corner-cut: 4px;
     position: absolute;
     top: 100%;
     left: 0;
     z-index: 100;
     min-width: 100%;
     margin: 2px 0 0 0;
+    background-color: var(--1bit-fg);
+    padding: var(--1bit-border-width);
+    clip-path: polygon(
+      var(--corner-cut) 0,
+      calc(100% - var(--corner-cut)) 0,
+      100% var(--corner-cut),
+      100% calc(100% - var(--corner-cut)),
+      calc(100% - var(--corner-cut)) 100%,
+      var(--corner-cut) 100%,
+      0 calc(100% - var(--corner-cut)),
+      0 var(--corner-cut)
+    );
+  }
+  
+  .bit-dropdown__list {
+    --corner-cut: 3px;
+    margin: 0;
     padding: 2px 0;
     list-style: none;
     background-color: var(--1bit-bg);
-    border: var(--1bit-border-width) solid var(--1bit-fg);
-    border-radius: 6px;
+    clip-path: polygon(
+      var(--corner-cut) 0,
+      calc(100% - var(--corner-cut)) 0,
+      100% var(--corner-cut),
+      100% calc(100% - var(--corner-cut)),
+      calc(100% - var(--corner-cut)) 100%,
+      var(--corner-cut) 100%,
+      0 calc(100% - var(--corner-cut)),
+      0 var(--corner-cut)
+    );
   }
   
   .bit-dropdown__option {

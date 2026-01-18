@@ -5,7 +5,7 @@
   let panelTab = $state('info');
   let showDateTime = $state(true);
   let showDitherOptions = $state(true);
-  let colorTheme = $state('classic');
+  let colorTheme = $state('amber');
   let themeMode = $state('dark');
   let showSidebar = $state(true);
   let borderWidth = $state(1);
@@ -14,6 +14,7 @@
   
   // Demo state for components
   let inputValue = $state('');
+  let inputVariant = $state<'box' | 'underline'>('box');
   let dropdownValue = $state('option1');
   let activeTab = $state('tab1');
   
@@ -78,9 +79,11 @@
   // All themes combined
   const colorThemes = $derived({ ...builtInThemes, ...customThemes });
   
-  // List items for theme picker
+  // List items for theme picker (sorted alphabetically)
   const themeListItems = $derived(
-    Object.entries(colorThemes).map(([id, theme]) => ({ id, content: theme.name }))
+    Object.entries(colorThemes)
+      .map(([id, theme]) => ({ id, content: theme.name }))
+      .sort((a, b) => a.content.localeCompare(b.content))
   );
   
   // Save custom theme
@@ -220,12 +223,6 @@
     <!-- Column 1: Controls -->
     <div class="column">
       <section>
-        <h2>Theme</h2>
-        <Radio name="theme" value="light" label="Light" bind:group={themeMode} />
-        <Radio name="theme" value="dark" label="Dark" bind:group={themeMode} />
-      </section>
-      
-      <section>
         <h2>Colors</h2>
         <List 
           items={themeListItems} 
@@ -234,20 +231,20 @@
       </section>
       
       <section>
-        <h2>Brightness</h2>
-        <Slider bind:value={brightness} min={20} max={100} step={10} />
-      </section>
-      
-      <section>
         <h2>Options</h2>
         <Checkbox label="Show Date/Time" bind:checked={showDateTime} />
-        <Checkbox label="Show Dither Picker" bind:checked={showDitherOptions} />
         <Checkbox label="Show Sidebar" bind:checked={showSidebar} />
       </section>
       
       <section>
+        <h2>Input Type</h2>
+        <Radio name="inputType" value="box" label="Box" bind:group={inputVariant} />
+        <Radio name="inputType" value="underline" label="Underline" bind:group={inputVariant} />
+      </section>
+      
+      <section>
         <h2>Input</h2>
-        <Input bind:value={inputValue} placeholder="Type here..." />
+        <Input bind:value={inputValue} placeholder="Type here..." variant={inputVariant} />
       </section>
       
       <section>
@@ -299,15 +296,6 @@
       </section>
       
       <section>
-        <h2>Buttons</h2>
-        <div class="row">
-          <Button>OK</Button>
-          <Button>Cancel</Button>
-          <Button>New</Button>
-        </div>
-      </section>
-      
-      <section>
         <h2>Tabs</h2>
         <Tabs 
           tabs={[
@@ -326,17 +314,8 @@
         </Panel>
       </section>
       
-      <section>
-        <h2>Title Bar</h2>
-        <TitleBar title="File Manager" rightContent="12:00" />
-      </section>
-      
-      <section>
-        <h2>Screen Size</h2>
-        <ProgressBar value={sizePercent} label={currentSize.name} />
-      </section>
     </div>
-    
+
     <!-- Column 3: Sharp Wizard Clock -->
     {#if showSidebar}
     <section class="wizard-clock">
@@ -395,23 +374,15 @@
       </div>
       {/if}
       
-      {#if showDitherOptions}
-      <div class="dither-picker">
-        <h2>Dither Pattern</h2>
-        <div class="dither-grid">
-          {#each ditherPatterns as pattern}
-            <button 
-              class="dither-sample" 
-              class:dither-sample--active={ditherPattern === pattern.id}
-              onclick={() => ditherPattern = pattern.id}
-            >
-              <div class="dither-box {getDitherClass(pattern.id)}"></div>
-              <span>{pattern.label}</span>
-            </button>
-          {/each}
-        </div>
+      <div class="brightness-section">
+        <h2>Brightness</h2>
+        <Slider bind:value={brightness} min={20} max={100} step={10} />
       </div>
-      {/if}
+      
+      <div class="screen-size-section">
+        <h2>Screen Size</h2>
+        <ProgressBar value={sizePercent} label={currentSize.name} />
+      </div>
     </section>
     {/if}
   </div>

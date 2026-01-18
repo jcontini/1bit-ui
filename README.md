@@ -2,7 +2,7 @@
 
 A retro 1-bit component library for Svelte 5 — inspired by Palm Pilot, Macintosh, and Game Boy aesthetics.
 
-![1bit UI Demo](https://via.placeholder.com/800x400/000000/888869?text=1bit+UI)
+![1bit UI Demo](1bit-ui.png)
 
 ## What is 1-bit?
 
@@ -119,6 +119,10 @@ npm run package
 npm run check
 ```
 
+## Pairs Well With
+
+- [Pixelarticons](https://github.com/halfmage/pixelarticons) — 486 beautiful pixel art icons on a 24x24 grid. Perfect for 1-bit UIs!
+
 ## License
 
 MIT
@@ -126,4 +130,5 @@ MIT
 ## Credits
 
 - Fonts: [Tamzen](https://github.com/sunaku/tamzen-font)
-- Inspiration: Palm OS, Classic Mac OS, Game Boy
+- Icons: [Pixelarticons](https://github.com/halfmage/pixelarticons) by halfmage
+- Inspiration: Palm OS, Classic Mac OS, Game Boy, Sharp Wizard

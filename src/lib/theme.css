@@ -1,0 +1,117 @@
+/* 
+ * 1bit UI Theme
+ * A faithful recreation of classic 1-bit display aesthetics
+ * Inspired by Palm Pilot, Macintosh, and Game Boy
+ */
+
+/* Tamzen - crisp bitmap font */
+@font-face {
+  font-family: 'Tamzen';
+  src: url('/fonts/Tamzen.ttf') format('truetype');
+}
+
+:root {
+  /* Light mode (classic LCD green) */
+  --1bit-bg: #888869;
+  --1bit-fg: #000000;
+  
+  /* Typography */
+  --1bit-font: 'Tamzen', 'SF Mono', 'Monaco', monospace;
+  --1bit-font-size: 16px;
+  --1bit-line-height: 1.4;
+  
+  /* Spacing */
+  --1bit-spacing-xs: 2px;
+  --1bit-spacing-sm: 4px;
+  --1bit-spacing-md: 6px;
+  --1bit-spacing-lg: 8px;
+  
+  /* Borders */
+  --1bit-border-width: 2px;
+  --1bit-border-thick: 3px;
+  
+  /* 
+   * Dither Patterns
+   * Classic techniques for simulating grayscale on 1-bit displays
+   * Based on Bayer ordered dithering matrices
+   */
+  
+  /* 25% gray - sparse dots */
+  --1bit-dither-25: url("data:image/svg+xml,%3Csvg width='4' height='4' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='4' height='4' fill='%23888869'/%3E%3Crect x='0' y='0' width='1' height='1' fill='%23000000'/%3E%3C/svg%3E");
+  
+  /* 50% gray - classic checkerboard */
+  --1bit-dither-50: url("data:image/svg+xml,%3Csvg width='2' height='2' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='2' height='2' fill='%23888869'/%3E%3Crect x='0' y='0' width='1' height='1' fill='%23000000'/%3E%3Crect x='1' y='1' width='1' height='1' fill='%23000000'/%3E%3C/svg%3E");
+  
+  /* 75% gray - dense dots */
+  --1bit-dither-75: url("data:image/svg+xml,%3Csvg width='4' height='4' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='4' height='4' fill='%23000000'/%3E%3Crect x='0' y='0' width='1' height='1' fill='%23888869'/%3E%3C/svg%3E");
+  
+  /* Horizontal lines */
+  --1bit-dither-hlines: url("data:image/svg+xml,%3Csvg width='1' height='2' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='1' height='1' fill='%23000000'/%3E%3Crect y='1' width='1' height='1' fill='%23888869'/%3E%3C/svg%3E");
+  
+  /* Vertical lines */
+  --1bit-dither-vlines: url("data:image/svg+xml,%3Csvg width='2' height='1' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='1' height='1' fill='%23000000'/%3E%3Crect x='1' width='1' height='1' fill='%23888869'/%3E%3C/svg%3E");
+  
+  /* Diagonal lines (45°) */
+  --1bit-dither-diag: url("data:image/svg+xml,%3Csvg width='4' height='4' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='4' height='4' fill='%23888869'/%3E%3Cpath d='M0,0 L1,0 L0,1 Z M3,0 L4,0 L4,1 L1,4 L0,4 L0,3 Z M4,3 L4,4 L3,4 Z' fill='%23000000'/%3E%3C/svg%3E");
+  
+  /* Bayer 4x4 ordered dither - classic Mac/Game Boy look */
+  --1bit-dither-bayer: url("data:image/svg+xml,%3Csvg width='4' height='4' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='4' height='4' fill='%23888869'/%3E%3Crect x='0' y='0' width='1' height='1' fill='%23000000'/%3E%3Crect x='2' y='0' width='1' height='1' fill='%23000000'/%3E%3Crect x='3' y='1' width='1' height='1' fill='%23000000'/%3E%3Crect x='1' y='1' width='1' height='1' fill='%23000000'/%3E%3Crect x='0' y='2' width='1' height='1' fill='%23000000'/%3E%3Crect x='2' y='2' width='1' height='1' fill='%23000000'/%3E%3Crect x='1' y='3' width='1' height='1' fill='%23000000'/%3E%3Crect x='3' y='3' width='1' height='1' fill='%23000000'/%3E%3C/svg%3E");
+  
+  /* Crosshatch pattern */
+  --1bit-dither-cross: url("data:image/svg+xml,%3Csvg width='4' height='4' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='4' height='4' fill='%23888869'/%3E%3Cline x1='0' y1='0' x2='4' y2='4' stroke='%23000000' stroke-width='1'/%3E%3Cline x1='4' y1='0' x2='0' y2='4' stroke='%23000000' stroke-width='1'/%3E%3C/svg%3E");
+}
+
+/* Dark mode */
+.dark, [data-theme="dark"] {
+  --1bit-bg: #000000;
+  --1bit-fg: #888869;
+  
+  /* Dark mode dither patterns (inverted) */
+  --1bit-dither-25: url("data:image/svg+xml,%3Csvg width='4' height='4' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='4' height='4' fill='%23000000'/%3E%3Crect x='0' y='0' width='1' height='1' fill='%23888869'/%3E%3C/svg%3E");
+  
+  --1bit-dither-50: url("data:image/svg+xml,%3Csvg width='2' height='2' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='2' height='2' fill='%23000000'/%3E%3Crect x='0' y='0' width='1' height='1' fill='%23888869'/%3E%3Crect x='1' y='1' width='1' height='1' fill='%23888869'/%3E%3C/svg%3E");
+  
+  --1bit-dither-75: url("data:image/svg+xml,%3Csvg width='4' height='4' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='4' height='4' fill='%23888869'/%3E%3Crect x='0' y='0' width='1' height='1' fill='%23000000'/%3E%3C/svg%3E");
+  
+  --1bit-dither-hlines: url("data:image/svg+xml,%3Csvg width='1' height='2' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='1' height='1' fill='%23888869'/%3E%3Crect y='1' width='1' height='1' fill='%23000000'/%3E%3C/svg%3E");
+  
+  --1bit-dither-vlines: url("data:image/svg+xml,%3Csvg width='2' height='1' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='1' height='1' fill='%23888869'/%3E%3Crect x='1' width='1' height='1' fill='%23000000'/%3E%3C/svg%3E");
+  
+  --1bit-dither-diag: url("data:image/svg+xml,%3Csvg width='4' height='4' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='4' height='4' fill='%23000000'/%3E%3Cpath d='M0,0 L1,0 L0,1 Z M3,0 L4,0 L4,1 L1,4 L0,4 L0,3 Z M4,3 L4,4 L3,4 Z' fill='%23888869'/%3E%3C/svg%3E");
+  
+  --1bit-dither-bayer: url("data:image/svg+xml,%3Csvg width='4' height='4' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='4' height='4' fill='%23000000'/%3E%3Crect x='0' y='0' width='1' height='1' fill='%23888869'/%3E%3Crect x='2' y='0' width='1' height='1' fill='%23888869'/%3E%3Crect x='3' y='1' width='1' height='1' fill='%23888869'/%3E%3Crect x='1' y='1' width='1' height='1' fill='%23888869'/%3E%3Crect x='0' y='2' width='1' height='1' fill='%23888869'/%3E%3Crect x='2' y='2' width='1' height='1' fill='%23888869'/%3E%3Crect x='1' y='3' width='1' height='1' fill='%23888869'/%3E%3Crect x='3' y='3' width='1' height='1' fill='%23888869'/%3E%3C/svg%3E");
+  
+  --1bit-dither-cross: url("data:image/svg+xml,%3Csvg width='4' height='4' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='4' height='4' fill='%23000000'/%3E%3Cline x1='0' y1='0' x2='4' y2='4' stroke='%23888869' stroke-width='1'/%3E%3Cline x1='4' y1='0' x2='0' y2='4' stroke='%23888869' stroke-width='1'/%3E%3C/svg%3E");
+}
+
+/* Base styles */
+.onebit {
+  font-family: var(--1bit-font);
+  font-size: var(--1bit-font-size);
+  line-height: var(--1bit-line-height);
+  color: var(--1bit-fg);
+  background-color: var(--1bit-bg);
+  /* Crisp pixel rendering */
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+/* Reset for components */
+.onebit button,
+.onebit input,
+.onebit select,
+.onebit textarea {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+/* Utility classes for dither backgrounds */
+.dither-25 { background-image: var(--1bit-dither-25); }
+.dither-50 { background-image: var(--1bit-dither-50); }
+.dither-75 { background-image: var(--1bit-dither-75); }
+.dither-hlines { background-image: var(--1bit-dither-hlines); }
+.dither-vlines { background-image: var(--1bit-dither-vlines); }
+.dither-diag { background-image: var(--1bit-dither-diag); }
+.dither-bayer { background-image: var(--1bit-dither-bayer); }
+.dither-cross { background-image: var(--1bit-dither-cross); }
